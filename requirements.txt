@@ -1,0 +1,11 @@
+Package       Version
+------------- -------
+h5py          3.2.1
+Keras         2.4.3
+numpy         1.20.3
+pip           21.1.1
+pkg-resources 0.0.0
+PyYAML        5.4.1
+scipy         1.6.3
+setuptools    56.2.0
+wheel         0.36.2
