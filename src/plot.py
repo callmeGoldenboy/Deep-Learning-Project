@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from keras.datasets import cifar10
+import numpy as np
 
 def plot_dataset():
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
@@ -10,13 +11,13 @@ def plot_dataset():
         idx = np.where(y_train[:]==i)[0]
         features_idx = x_train[idx,::]
         img_num = np.random.randint(features_idx.shape[0])
-        im = np.transpose(features_idx[img_num,::],(1,2,0))
+        im = np.transpose(features_idx[img_num,::],(0,1,2))
         ax.set_title(str(i))
         plt.imshow(im)
     plt.show()
 
 
-def plot_loss_and_accuracy():
+def plot_loss_and_accuracy(cnn):
     plt.figure(0)
     plt.plot(cnn.history['acc'],'r')
     plt.plot(cnn.history['val_acc'],'g')
@@ -40,3 +41,6 @@ def plot_loss_and_accuracy():
 
 
     plt.show()
+
+
+#plot_dataset()
