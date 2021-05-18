@@ -30,8 +30,8 @@ def plot_loss_and_accuracy(cnn):
 
 
     plt.figure(1)
-    plt.plot(cnn.history['loss'],'r')
-    plt.plot(cnn.history['val_loss'],'g')
+    plt.plot(cnn.history.history['loss'],'r')
+    plt.plot(cnn.history.history['val_loss'],'g')
     plt.xticks(np.arange(0, 101, 2.0))
     plt.rcParams['figure.figsize'] = (8, 6)
     plt.xlabel("Num of Epochs")
