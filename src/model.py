@@ -19,9 +19,21 @@ from sklearn.model_selection import train_test_split
 from sklearn.utils.multiclass import unique_labels
 from tensorflow.keras.utils import to_categorical
 from keras.losses import categorical_crossentropy
-from keras.callbacks import ReduceLROnPlateau
+from keras.callbacks import ReduceLROnPlateau, Callback
 from plot import plot_loss_and_accuracy
+import time
 import numpy as np 
+
+class TimeHistory(Callback):
+    def on_train_begin(self, logs={}):
+        self.times = []
+
+    def on_epoch_begin(self, batch, logs={}):
+        self.epoch_time_start = time.time()
+
+    def on_epoch_end(self, batch, logs={}):
+        self.times.append(time.time() - self.epoch_time_start)
+
 
 class AlexNet:
     
@@ -101,7 +113,7 @@ def augment():
     pass
 
 
-def main():
+def milestone1():
     filters = [96,256,384,384,256]
     kernel_sizes = [(11,11),(5,5),(3,3),(3,3),(3,3)]
     strides = [(4,4),(1,1),(1,1),(1,1),(1,1)]
@@ -114,16 +126,76 @@ def main():
         "strides": strides,
         "annealer": False,
         "batch_size": 100,
-        "epochs":1,
+        "epochs":5,
         "learn_rate":.001
         }
     x_train,x_val,x_test,y_train,y_val,y_test = get_datasets()
     model = AlexNet(params)
-    model.net.fit(x=x_train, y=y_train, batch_size=model.batch_size, 
+    time_callback = TimeHistory()
+    train_result = model.net.fit(x=x_train, y=y_train, batch_size=model.batch_size, 
                             epochs = model.epochs, steps_per_epoch = x_train.shape[0]//model.batch_size,
-                            validation_data = (x_val, y_val), validation_steps = 250, callbacks = model.lrr, verbose=1)
-    
-    plot_loss_and_accuracy(model.net)
+                            validation_data = (x_val, y_val), validation_steps = x_val.shape[0]//model.batch_size, callbacks = [e for e in [model.lrr, time_callback] if e], verbose=1)
+    plot_loss_and_accuracy(train_result) 
+    print(time_callback.times)
+
+def milestone2():
+    #Investigate the effects of batch normalization
+    filters = [96,256,384,384,256]
+    kernel_sizes = [(11,11),(5,5),(3,3),(3,3),(3,3)]
+    strides = [(4,4),(1,1),(1,1),(1,1),(1,1)]
+    params = {
+        "batch_norm":True,
+        "data_augmentation": False,
+        "dropout": False,
+        "filters": filters,
+        "kernel_sizes": kernel_sizes,
+        "strides": strides,
+        "annealer": False,
+        "batch_size": 100,
+        "epochs":2,
+        "learn_rate":.001
+        }
+    x_train,x_val,x_test,y_train,y_val,y_test = get_datasets()
+    model = AlexNet(params)
+    train_result = model.net.fit(x=x_train, y=y_train, batch_size=model.batch_size, 
+                            epochs = model.epochs, steps_per_epoch = x_train.shape[0]//model.batch_size,
+                            validation_data = (x_val, y_val), validation_steps = x_val.shape[0]//model.batch_size, callbacks = model.lrr, verbose=1)
+    plot_loss_and_accuracy(train_result)
+
+def milestone3():
+    #Investigate the effects of applying different degrees of dropout
+    milestone3 =  {
+    "batch_norm":False,
+    "data_augmentation": False,
+    "dropout": True,
+    "filters": filters,
+    "kernel_sizes": kernel_sizes,
+    "strides": strides,
+    "annealer": False,
+    "batch_size": 100,
+    "epochs":2,
+    "learn_rate":.001
+    }
+
+def milestone4():
+    #investigate the effects of data augmentation
+    params =  {
+    "batch_norm":False,
+    "data_augmentation":True,
+    "dropout": False,
+    "filters": filters,
+    "kernel_sizes": kernel_sizes,
+    "strides": strides,
+    "annealer": False,
+    "batch_size": 100,
+    "epochs":2,
+    "learn_rate":.001
+    }
+
+def milestone5():
+    #test the model on the ciphar100
+    pass
     
 if __name__ == "__main__":
-    main()
+    milestone1()
+

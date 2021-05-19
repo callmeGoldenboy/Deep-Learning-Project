@@ -17,30 +17,37 @@ def plot_dataset():
     plt.show()
 
 
-def plot_loss_and_accuracy(cnn):
-    plt.figure(0)
-    plt.plot(cnn.history['acc'],'r')
-    plt.plot(cnn.history['val_acc'],'g')
-    plt.xticks(np.arange(0, 101, 2.0))
-    plt.rcParams['figure.figsize'] = (8, 6)
-    plt.xlabel("Num of Epochs")
-    plt.ylabel("Accuracy")
-    plt.title("Training Accuracy vs Validation Accuracy")
-    plt.legend(['train','validation'])
-
-
-    plt.figure(1)
-    plt.plot(cnn.history.history['loss'],'r')
-    plt.plot(cnn.history.history['val_loss'],'g')
-    plt.xticks(np.arange(0, 101, 2.0))
-    plt.rcParams['figure.figsize'] = (8, 6)
-    plt.xlabel("Num of Epochs")
-    plt.ylabel("Loss")
-    plt.title("Training Loss vs Validation Loss")
-    plt.legend(['train','validation'])
-
-
-    plt.show()
+def plot_loss_and_accuracy(cnn,name="figure"):
+    #plt.figure(0)
+    plt.figure(figsize=(20,20))
+    train_acc = cnn.history["accuracy"]
+    train_loss = cnn.history["loss"]
+    val_acc = cnn.history["val_accuracy"]
+    val_loss = cnn.history["val_loss"]
+    x = list(range(1,len(cnn.history["accuracy"]) + 1))
+    xticks = list(range(1,int(len(cnn.history["accuracy"])) + 1,int(len(cnn.history["accuracy"]) / 5)))
+    print(x)
+    fig,(ax1,ax2) = plt.subplots(1,2)
+    ax1.plot(x,train_acc,'r')
+    ax1.plot(x,val_acc,'g')
+    ax1.set_xticks(xticks)
+    ax1.set_xlabel("Num of Epochs")
+    ax1.set_ylabel("Accuracy")
+    ax1.set_title("Accuracy")
+    ax1.legend(['train','validation'])
+    #loss plots 
+    ax2.plot(x,train_loss,'r')
+    ax2.plot(x,val_loss,'g')
+    ax2.set_xticks(xticks)
+    ax2.set_xlabel("Num of Epochs")
+    ax2.set_ylabel("Loss")
+    ax2.set_title("Loss")
+    ax2.legend(['train','validation'])
+    fig.subplots_adjust(wspace=0.5)
+    #fig.suptitle("Accuracy and Loss for Training and Validation")
+    
+   
+    plt.savefig(name)
 
 
 #plot_dataset()
