@@ -206,5 +206,5 @@ def pickle_load(path):
     return pickle.load(open(path,"rb"))
 
 if __name__ == "__main__":
-    milestone3(epoch=10)
+    milestone3(epoch=100)
 

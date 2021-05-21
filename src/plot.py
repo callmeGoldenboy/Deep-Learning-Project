@@ -30,7 +30,7 @@ def plot_loss_and_accuracy(cnn=None, name="figure", milestone=None, save=False):
     val_loss = cnn["val_loss"]
     n = len(cnn["accuracy"])
     x = list(range(1,len(cnn["accuracy"]) + 1))
-    xticks = range(1,n + 1, int(round(n / 9)) + 1)
+    xticks = range(1,n + 1, int(round(n / 9)))
     yticks_acc = [round(i*0.1,1) for i in range(0,11)]
     yticks_loss = [round(i*0.5,1) for i in range(0,9)]
     fig,(ax1,ax2) = plt.subplots(2,1)
@@ -56,6 +56,9 @@ def plot_loss_and_accuracy(cnn=None, name="figure", milestone=None, save=False):
     ax2.legend(['train','validation'])
     fig.subplots_adjust(wspace=0.5)
     fig.suptitle("Accuracy and Loss")
+    #plt.grid()
+    ax1.grid()
+    ax2.grid()
     if save:
         plt.savefig("src/results/"+name)
     else:
@@ -67,5 +70,5 @@ def plot_loss_and_accuracy(cnn=None, name="figure", milestone=None, save=False):
 #print(history['loss'])
 #plot_loss_and_accuracy(history)
 
-[plot_loss_and_accuracy(milestone=f_n, save=True, name=f_n+".png") for f_n in os.listdir("dumps") if 'mileston3' in f_n ]
+#[plot_loss_and_accuracy(milestone=f_n, save=True, name=f_n+".png") for f_n in os.listdir("dumps") if 'mileston3' in f_n ]
         
