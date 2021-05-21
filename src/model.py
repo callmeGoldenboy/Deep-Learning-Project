@@ -23,6 +23,7 @@ from keras.callbacks import ReduceLROnPlateau, Callback
 from plot import plot_loss_and_accuracy
 import time
 import numpy as np 
+import pickle
 
 class TimeHistory(Callback):
     def on_train_begin(self, logs={}):
@@ -39,6 +40,9 @@ class AlexNet:
     
     def __init__(self,params):
         self.net = Sequential()
+        self.filters = [96,256,384,384,256]
+        self.kernel_sizes = [(11,11),(5,5),(3,3),(3,3),(3,3)]
+        self.strides = [(4,4),(1,1),(1,1),(1,1),(1,1)]
         for key,val in params.items():
             setattr(self,key,val)
             
@@ -77,17 +81,18 @@ class AlexNet:
             self.net.add(BatchNormalization())
         self.net.add(Activation('relu'))
         if self.dropout:
-            self.net.add(Dropout(0.4))
+            self.net.add(Dropout(self.dropout_ratio))
             
         #2-3 fully connected layers
         output_spaces = [4096,1000]
-        for dim in output_spaces:
+        for i,dim in enumerate(output_spaces):
             self.net.add(Dense(dim))
             if self.batch_norm:
                 self.net.add(BatchNormalization())
             self.net.add(Activation('relu'))
-            if self.dropout:
-                self.net.add(Dropout(0.4))
+            if self.dropout and i == 0 and self.dropout_option == 2:
+                print("fully connected layer 2 has dropout")
+                self.net.add(Dropout(self.dropout_ratio))
                 
         #output layer
         self.net.add(Dense(10))
@@ -112,72 +117,68 @@ def augment():
     #Milestone 4?
     pass
 
-
-def milestone1():
-    filters = [96,256,384,384,256]
-    kernel_sizes = [(11,11),(5,5),(3,3),(3,3),(3,3)]
-    strides = [(4,4),(1,1),(1,1),(1,1),(1,1)]
-    params = {
+def init_model(params={}):
+    new_params = {
         "batch_norm":False,
         "data_augmentation": False,
         "dropout": False,
-        "filters": filters,
-        "kernel_sizes": kernel_sizes,
-        "strides": strides,
         "annealer": False,
         "batch_size": 100,
-        "epochs":5,
+        "epoch":5,
         "learn_rate":.001
-        }
+    } 
+    for k,v in params.items():
+        new_params[k] = v 
+
+    print("Model initated w. params:", new_params)
+    model = AlexNet(new_params)
+
+    return model
+
+def milestone1(epoch=5):
+    params = {"epoch":epoch}
+    model = init_model(params=params)
     x_train,x_val,x_test,y_train,y_val,y_test = get_datasets()
-    model = AlexNet(params)
     time_callback = TimeHistory()
     train_result = model.net.fit(x=x_train, y=y_train, batch_size=model.batch_size, 
-                            epochs = model.epochs, steps_per_epoch = x_train.shape[0]//model.batch_size,
+                            epochs = model.epoch, steps_per_epoch = x_train.shape[0]//model.batch_size,
                             validation_data = (x_val, y_val), validation_steps = x_val.shape[0]//model.batch_size, callbacks = [e for e in [model.lrr, time_callback] if e], verbose=1)
-    plot_loss_and_accuracy(train_result) 
-    print(time_callback.times)
+    #plot_loss_and_accuracy(train_result) 
+    
+    pickle_dump('dumps/milestone1',train_result,time_callback.times)
+    return (train_result, time_callback.times)
 
-def milestone2():
+def milestone2(epoch=5):
     #Investigate the effects of batch normalization
-    filters = [96,256,384,384,256]
-    kernel_sizes = [(11,11),(5,5),(3,3),(3,3),(3,3)]
-    strides = [(4,4),(1,1),(1,1),(1,1),(1,1)]
-    params = {
-        "batch_norm":True,
-        "data_augmentation": False,
-        "dropout": False,
-        "filters": filters,
-        "kernel_sizes": kernel_sizes,
-        "strides": strides,
-        "annealer": False,
-        "batch_size": 100,
-        "epochs":2,
-        "learn_rate":.001
-        }
+    params = { "batch_norm":True, "epoch":epoch}
+    model = init_model(params=params)
     x_train,x_val,x_test,y_train,y_val,y_test = get_datasets()
-    model = AlexNet(params)
+    time_callback = TimeHistory()
     train_result = model.net.fit(x=x_train, y=y_train, batch_size=model.batch_size, 
-                            epochs = model.epochs, steps_per_epoch = x_train.shape[0]//model.batch_size,
-                            validation_data = (x_val, y_val), validation_steps = x_val.shape[0]//model.batch_size, callbacks = model.lrr, verbose=1)
-    plot_loss_and_accuracy(train_result)
+                            epochs = model.epoch, steps_per_epoch = x_train.shape[0]//model.batch_size,
+                            validation_data = (x_val, y_val), validation_steps = x_val.shape[0]//model.batch_size, callbacks = [e for e in [model.lrr, time_callback] if e], verbose=1)
+    
+    pickle_dump('dumps/milestone2',train_result,time_callback.times)
+    return (train_result, time_callback.times)
 
-def milestone3():
+def milestone3(epoch=5):
     #Investigate the effects of applying different degrees of dropout
-    milestone3 =  {
-    "batch_norm":False,
-    "data_augmentation": False,
-    "dropout": True,
-    "filters": filters,
-    "kernel_sizes": kernel_sizes,
-    "strides": strides,
-    "annealer": False,
-    "batch_size": 100,
-    "epochs":2,
-    "learn_rate":.001
-    }
+    params =  {"epoch":epoch}
+    x_train,x_val,x_test,y_train,y_val,y_test = get_datasets()
+    dropout_options = [1,2]
+    dropout_ratios = [0.3,0.4,0.5,0.6]
+    for option in dropout_options:
+        params["options"] = option
+        for ratio in dropout_ratios:
+            time_callback = TimeHistory()   
+            params["dropout_ratio"] = ratio
+            model = init_model(params=params)
+            train_results = model.net.fit(x=x_train, y=y_train, batch_size=model.batch_size, 
+                            epochs = model.epoch, steps_per_epoch = x_train.shape[0]//model.batch_size,
+                            validation_data = (x_val, y_val), validation_steps = x_val.shape[0]//model.batch_size, callbacks = [e for e in [model.lrr, time_callback] if e], verbose=1)
+            pickle_dump("dumps/"+("mileston3-opt-"+str(option)+"-ratio-"+str(ratio)), train_results, time_callback.times)
 
-def milestone4():
+def milestone4(epoch=5):
     #investigate the effects of data augmentation
     params =  {
     "batch_norm":False,
@@ -188,14 +189,22 @@ def milestone4():
     "strides": strides,
     "annealer": False,
     "batch_size": 100,
-    "epochs":2,
+    "epochs":epoch,
     "learn_rate":.001
     }
 
-def milestone5():
+def milestone5(epoch=5):
     #test the model on the ciphar100
     pass
     
+def pickle_dump(path,res,times):
+    res.history['times'] = times
+    with open(path, 'wb') as file_pi:
+        pickle.dump(res.history, file_pi)
+
+def pickle_load(path):
+    return pickle.load(open(path,"rb"))
+
 if __name__ == "__main__":
-    milestone1()
+    milestone3(epoch=10)
 
