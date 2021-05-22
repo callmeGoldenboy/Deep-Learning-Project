@@ -3,7 +3,7 @@ from keras.datasets import cifar10
 import numpy as np
 import pickle
 import os
-
+import math
 def plot_dataset():
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     num_classes = 10
@@ -30,7 +30,7 @@ def plot_loss_and_accuracy(cnn=None, name="figure", milestone=None, save=False):
     val_loss = cnn["val_loss"]
     n = len(cnn["accuracy"])
     x = list(range(1,len(cnn["accuracy"]) + 1))
-    xticks = range(1,n + 1, int(round(n / 9)))
+    xticks = range(1,n + 1, math.ceil((round(n / 9))))
     yticks_acc = [round(i*0.1,1) for i in range(0,11)]
     yticks_loss = [round(i*0.5,1) for i in range(0,9)]
     fig,(ax1,ax2) = plt.subplots(2,1)
@@ -64,6 +64,57 @@ def plot_loss_and_accuracy(cnn=None, name="figure", milestone=None, save=False):
     else:
         plt.show()
 
+def get_datasets():
+    #get train,validation and test data 
+    from keras.datasets import cifar10
+    from sklearn.model_selection import train_test_split
+    from sklearn.utils.multiclass import unique_labels
+    from tensorflow.keras.utils import to_categorical
+
+
+    (x_train, y_train),(x_test, y_test) = cifar10.load_data()
+    x_train,x_val,y_train,y_val = train_test_split(x_train,y_train,test_size=.3)
+    y_train_one_hot = to_categorical(y_train)
+    y_val_one_hot = to_categorical(y_val)
+    y_test_one_hot = to_categorical(y_test)
+    return x_train,x_val,x_test,y_train_one_hot,y_val_one_hot,y_test_one_hot
+
+def random_crop(image, crop_size=(16,16)):
+    return image
+    from skimage.transform import resize
+    height, width = image.shape[:2] # get original shape
+    rand_arr = np.random.random(size=2) # get two rands
+    x, y = (math.floor((height - crop_size[0]) * rand_arr[0]), math.floor((width - crop_size[1]) * rand_arr[1]))
+    image_crop = image[x:x+crop_size[0], y:y+crop_size[1], 0:3]
+    image_crop = resize(image_crop, image.shape)
+    return image_crop
+
+def tmp():
+     #investigate the effects of data augmentation
+    from keras.preprocessing.image import ImageDataGenerator
+    x_train,x_val,x_test,y_train,y_val,y_test = get_datasets()
+    
+    #rotation
+    generators = {
+        "crop":{"train_gen": ImageDataGenerator(preprocessing_function=random_crop),
+                "val_gen": ImageDataGenerator(preprocessing_function=random_crop)
+                },
+    }
+    for k,v in generators.items():
+        train_gen = v["train_gen"]
+        val_gen = v["val_gen"]
+        train_gen.fit(x_train)
+        val_gen.fit(x_val)
+        iterator_train = train_gen.flow(x_train ,y_train, batch_size=100)
+        iterator_val = val_gen.flow(x_val, y_val, batch_size=100)
+        x = next(iterator_train)
+        image = x[0]
+        print(image[0].shape)
+        plt.imshow(image[0])
+        plt.savefig("croppingtest")
+    
+tmp()
+#plot_loss_and_accuracy(milestone="milestone4", name="milestone4-rot", save=True)
 
 #plot_dataset()
 #history = pickle.load(open('dumps/milestone1',"rb"))
