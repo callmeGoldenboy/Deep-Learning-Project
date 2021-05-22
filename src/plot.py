@@ -80,7 +80,6 @@ def get_datasets():
     return x_train,x_val,x_test,y_train_one_hot,y_val_one_hot,y_test_one_hot
 
 def random_crop(image, crop_size=(16,16)):
-    return image
     from skimage.transform import resize
     height, width = image.shape[:2] # get original shape
     rand_arr = np.random.random(size=2) # get two rands
@@ -89,6 +88,7 @@ def random_crop(image, crop_size=(16,16)):
     image_crop = resize(image_crop, image.shape)
     return image_crop
 
+
 def tmp():
      #investigate the effects of data augmentation
     from keras.preprocessing.image import ImageDataGenerator
@@ -96,24 +96,27 @@ def tmp():
     
     #rotation
     generators = {
-        "crop":{"train_gen": ImageDataGenerator(preprocessing_function=random_crop),
-                "val_gen": ImageDataGenerator(preprocessing_function=random_crop)
+            "rot": {"train_gen": ImageDataGenerator(rescale=1/255, rotation_range=360),
+            "val_gen": ImageDataGenerator(rescale=1/255), 
                 },
     }
     for k,v in generators.items():
         train_gen = v["train_gen"]
-        val_gen = v["val_gen"]
-        train_gen.fit(x_train)
-        val_gen.fit(x_val)
-        iterator_train = train_gen.flow(x_train ,y_train, batch_size=100)
-        iterator_val = val_gen.flow(x_val, y_val, batch_size=100)
-        x = next(iterator_train)
-        image = x[0]
-        print(image[0].shape)
-        plt.imshow(image[0])
+        train_gen.fit(x_train[0:1])
+
+        plt.imshow(x_train[0])
+        plt.savefig("croppingtest")
+        import time
+        time.sleep(2)
+
+        iterator_train = train_gen.flow(x_train[0:1] ,y_train[0:1], batch_size=1)
+        x = iterator_train.next()
+        image = x[0][0]
+        print(image.shape)
+        plt.imshow(image)
         plt.savefig("croppingtest")
     
-tmp()
+#tmp()
 #plot_loss_and_accuracy(milestone="milestone4", name="milestone4-rot", save=True)
 
 #plot_dataset()
