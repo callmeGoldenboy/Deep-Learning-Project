@@ -33,18 +33,40 @@ import os
 
 class TimeHistory(Callback):
     def on_train_begin(self, logs={}):
+        """[summary]
+
+        Args:
+            logs (dict, optional): [description]. Defaults to {}.
+        """
         self.times = []
 
     def on_epoch_begin(self, batch, logs={}):
+        """[summary]
+
+        Args:
+            batch ([type]): [description]
+            logs (dict, optional): [description]. Defaults to {}.
+        """
         self.epoch_time_start = time.time()
 
     def on_epoch_end(self, batch, logs={}):
+        """[summary]
+
+        Args:
+            batch ([type]): [description]
+            logs (dict, optional): [description]. Defaults to {}.
+        """
         self.times.append(time.time() - self.epoch_time_start)
 
 
 class AlexNet:
     
     def __init__(self,params):
+        """Constructor of the AlexNet class. Creates an AlexNet object with the specified parameter settings
+
+        Args:
+            params (dict): the parameter settings of the model
+        """
         self.net = Sequential()
         self.filters = [96,256,384,384,256]
         self.kernel_sizes = [(11,11),(5,5),(3,3),(3,3),(3,3)]
@@ -64,6 +86,9 @@ class AlexNet:
             self.lrr = None
         
     def create_layers(self):
+        """
+        Initialzed the layers of the model
+        """
         #first convolutional layer 
         self.net.add(Conv2D(filters=self.filters[0],input_shape=(32,32,3), kernel_size=self.kernel_sizes[0], strides=self.strides[0], padding='same'))
         if self.batch_norm:
@@ -105,12 +130,13 @@ class AlexNet:
         if self.batch_norm:
             self.net.add(BatchNormalization())
         self.net.add(Activation('softmax'))
-
-    def forward_pass(self):
-        pass
-    
     
 def get_datasets():
+    """Returns the Cifar10 training,validation and test datasets
+
+    Returns:
+        tuple: the training,validatoin and test sets and their corrisponding labels
+    """
     #get train,validation and test data 
     (x_train, y_train),(x_test, y_test) = cifar10.load_data()
     x_train,x_val,y_train,y_val = train_test_split(x_train,y_train,test_size=.3)
@@ -119,11 +145,16 @@ def get_datasets():
     y_test_one_hot = to_categorical(y_test)
     return x_train,x_val,x_test,y_train_one_hot,y_val_one_hot,y_test_one_hot
     
-def augment():
-    #Milestone 4?
-    pass
 
 def init_model(params={}):
+    """Initializes an AlexNet model with the given parameter settings
+
+    Args:
+        params (dict, optional): the settings to apply to the model. Defaults to {}.
+
+    Returns:
+        AlexNet object: the initialized AlexNet object
+    """
     new_params = {
         "batch_norm":False,
         "data_augmentation": False,
@@ -141,11 +172,17 @@ def init_model(params={}):
 
     return model
 
-def milestone1(epoch=5,load_model=None):
+def milestone1(epoch=5,load_from_dump=None):
+    """Initial architecture of the AlexNet model, evaluated without any improvements
+
+    Args:
+        epoch (int, optional): the number of epochs to run. Defaults to 5.
+        load_from_dump (string, optional): If this is given, the model will be loaded from file and evaluated against the test data. Defaults to None.
+    """
     params = {"epoch":epoch}
-    model = init_model(params=params)
     x_train,x_val,x_test,y_train,y_val,y_test = get_datasets()
-    if not load_model:
+    if not load_from_dump:
+        model = init_model(params=params)
         time_callback = TimeHistory()
         early_stopping_monitor = EarlyStopping(restore_best_weights=True, patience=epoch)
         train_result = model.net.fit(x=x_train, y=y_train, batch_size=model.batch_size, 
@@ -154,17 +191,20 @@ def milestone1(epoch=5,load_model=None):
             
         pickle_dump('dumps/milestone1',train_result,time_callback.times, model=model)
     else:
-        model = load_model(load_model)
-        loss,acc = model.evaluate(x_test,y_test,batch_size=100)
-        print(f"Milestone 1: accuracy: {acc}, loss: {loss}")
+        evaluate_model(load_from_dump,x_test,y_test)
         
 
-def milestone2(epoch=5,load_model=None):
-    #Investigate the effects of batch normalization
+def milestone2(epoch=5,load_from_dump=None):
+    """Evaluting the model with data batch normalization
+
+    Args:
+        epoch (int, optional): the number of epochs to run. Defaults to 5.
+        load_from_dump (string, optional): If this is given, the model will be loaded from file and evaluated against the test data. Defaults to None.
+    """
     params = { "batch_norm":True, "epoch":epoch}
-    model = init_model(params=params)
     x_train,x_val,x_test,y_train,y_val,y_test = get_datasets()
-    if not load_model:
+    if not load_from_dump:
+        model = init_model(params=params)
         time_callback = TimeHistory()
         early_stopping_monitor = EarlyStopping(restore_best_weights=True, patience=epoch)
         train_result = model.net.fit(x=x_train, y=y_train, batch_size=model.batch_size, 
@@ -173,16 +213,20 @@ def milestone2(epoch=5,load_model=None):
         
         pickle_dump('dumps/milestone2',train_result,time_callback.times, model=model)
     else:
-        model = load_model(load_model)
-        loss,acc = model.evaluate(x_test,y_test,batch_size=100)
-        print(f"Milestone 2: accuracy: {acc}, loss: {loss}")
+        evaluate_model(load_from_dump,x_test,y_test)
 
 
-def milestone3(epoch=5, load_model=None):
-    if not load_model:
+def milestone3(epoch=5, load_from_dump=None):
+    """Evaluting the model with dropout
+
+    Args:
+        epoch (int, optional): the number of epochs to run. Defaults to 5.
+        load_from_dump (string, optional): If this is given, the model will be loaded from file and evaluated against the test data. Defaults to None.
+    """
+    x_train,x_val,x_test,y_train,y_val,y_test = get_datasets()
+    if not load_from_dump:
         #Investigate the effects of applying different degrees of dropout
         params =  {"epoch":epoch}
-        x_train,x_val,x_test,y_train,y_val,y_test = get_datasets()
         dropout_options = [1,2]
         dropout_ratios = [0.3,0.4,0.5,0.6]
         for option in dropout_options:
@@ -197,12 +241,19 @@ def milestone3(epoch=5, load_model=None):
                                 validation_data = (x_val, y_val), validation_steps = x_val.shape[0]//model.batch_size, callbacks = [e for e in [model.lrr, time_callback, early_stopping_monitor] if e], verbose=1)
                 pickle_dump("dumps/"+("mileston3-opt-"+str(option)+"-ratio-"+str(ratio)), train_results, time_callback.times,model=model)
     else:
-        model = load_model(load_model)
-        loss,acc = model.evaluate(x_test,y_test,batch_size=100)
-        print(f"Milestone 3: accuracy: {acc}, loss: {loss}")
+        evaluate_model(load_from_dump,x_test,y_test)
 
 
 def random_crop(image, crop_size=(24,24)):
+    """[summary]
+
+    Args:
+        image (ndarray): the image to be cropped as 3 dimensinal array
+        crop_size (tuple, optional): the size of the crop. Defaults to (24,24).
+
+    Returns:
+        ndarray: the cropped and rescaled version of the original image
+    """
     # crop_size=(16,16) is too small since the native res is (32,32)
     #(24,24) gave small acc too
     #(28,28) also gave small acc
@@ -214,10 +265,16 @@ def random_crop(image, crop_size=(24,24)):
     image_crop = resize(image_crop, image.shape)
     return image_crop
 
-def milestone4(epoch=5, load_model=None):
+def milestone4(epoch=5, load_from_dump=None):
+    """Evaluting the model with data augmentation
+
+    Args:
+        epoch (int, optional): the number of epochs to run. Defaults to 5.
+        load_from_dump (string, optional): If this is given, the model will be loaded from file and evaluated against the test data. Defaults to None.
+    """
     x_train,x_val,x_test,y_train,y_val,y_test = get_datasets()
 
-    if not load_model:
+    if not load_from_dump:
         #investigate the effects of data augmentation
         params =  {"epoch":epoch, "data_augmentation":True}
         time_callback = TimeHistory()
@@ -250,11 +307,8 @@ def milestone4(epoch=5, load_model=None):
     else:
         test_gen = ImageDataGenerator(rescale=1/255)
         test_gen.fit(x_test)
-        iterator_test = test_gen.flow(x_test ,y_test, batch_size=100)
-        model = load_model(load_model)
-        loss,acc = model.evaluate(iterator_test,batch_size=100)
-        print(f"Milestone 4: accuracy: {acc}, loss: {loss}")
-    
+        iterator_test = test_gen.flow(x_test ,y_test)
+        evaluate_model(load_from_dump=load_from_dump, generator=iterator_test)
 
 
 def milestone5(epoch=5):
@@ -262,6 +316,14 @@ def milestone5(epoch=5):
     pass
     
 def pickle_dump(path,res,times,model=None):
+    """Saves the history,computational time and model onto files, to be used later on 
+
+    Args:
+        path (string): the path where the objects will be saved
+        res (keras.History): the history object containg the accuracies and losses
+        times (list): list of times. Each time represents the time that the corresponding epoch took 
+        model (Keras.model.Sequential, optional): the trained model. Defaults to None.
+    """
     if model:
         model.net.save(path+"-model")
     res.history['times'] = times
@@ -269,11 +331,101 @@ def pickle_dump(path,res,times,model=None):
         pickle.dump(res.history, file_pi)
 
 def pickle_load(path):
+    """Loads a history pickly object
+
+    Args:
+        path (string): the path where the object is located
+
+    Returns:
+        Sequential.History: the history object
+    """
     return pickle.load(open(path,"rb"))
 
 def load_model(path):
+    """Loads a precomputed model
+
+    Args:
+        path (string): the path where the model is located
+
+    Returns:
+        keras.models.Sequential: the precomputed model
+    """
     assert os.path.exists(path + "-model"), "Could not find " + path + "-model"
     return keras.models.load_model(path+"-model")
 
+def evaluate_model(load_from_dump,x_test=None,y_test=None,generator=None):
+    """Evaluates a precomputed model on the test data
+
+    Args:
+        load_from_dump (string): the name of the model
+        x_test (ndarray, optional): the test datapoints. Defaults to None.
+        y_test (ndarray, optional): the labels for the datapoints. Defaults to None.
+        generator (ImageDataGenerator iterator, optional): If a generator is given, it will be used to generate the testpoitns. Defaults to None
+    """
+    path = "./dumps/"
+    model = load_model(path + load_from_dump)
+    if generator:
+        loss,acc = model.evaluate(generator) #for milestone4 where the data is generated from imagedatagenerator
+    else:
+        loss,acc = model.evaluate(x_test,y_test)
+    print(f"{load_from_dump}: accuracy: {acc:.4%}, loss: {loss}")
+
+def evaluate_milestones():
+    """Run the evaluation on the pretrained models. Outputs the final test accuracy and loss
+    """
+    milestones = {"mile1":{"func":milestone1,
+                           "vals": ["milestone1"]},
+                  "mile2":{"func":milestone2,
+                            "vals": ["milestone2"]},
+                  "mile3":{"func":milestone3,
+                            "vals":["mileston3-opt-2-ratio-0.4"]},
+                   "mile4":{"func":milestone4,
+                            "vals":["milestone4-crop",
+                                    "milestone4-flip-both",
+                                    "milestone4-flip-horizontal",
+                                    "milestone4-flip-vertical",
+                                    "milestone4-rot-15",
+                                    "milestone4-rot-30",
+                                    "milestone4-rot-45"]}
+                  }
+    for _,v in milestones.items():
+        func = v["func"]
+        versions = v["vals"]
+        for version in versions:
+            func(load_from_dump=version)
+
+def final_model(epoch,load_from_dump=None):
+    #should have batchnormalization, cropping, horizontal flip, rotation 15
+    x_train,x_val,x_test,y_train,y_val,y_test = get_datasets()
+    if not load_from_dump:
+        params =  {"epoch":epoch, "data_augmentation":True,"batch_norm":True}
+        time_callback = TimeHistory()
+
+        generators = {
+            "rot-15-crop-horizontal-flip": ImageDataGenerator(rescale=1/255,rotation_range=15,horizontal_flip=True,preprocessing_function=random_crop),
+        }
+
+        val_gen = ImageDataGenerator(rescale=1/255)
+        val_gen.fit(x_val)
+        iterator_val = val_gen.flow(x_val, y_val, batch_size=100)
+        for k,v in generators.items():
+            train_gen = v
+            train_gen.fit(x_train)
+            early_stopping_monitor = EarlyStopping(restore_best_weights=True, patience=epoch)
+            model = init_model(params=params)
+            iterator_train = train_gen.flow(x_train ,y_train, batch_size=model.batch_size)
+            train_result = model.net.fit(iterator_train, batch_size=model.batch_size, 
+                                    epochs = model.epoch, steps_per_epoch = x_train.shape[0]//model.batch_size,
+                                    validation_data = iterator_val, validation_steps = x_val.shape[0]//model.batch_size,
+                                    callbacks = [e for e in [model.lrr, time_callback, early_stopping_monitor] if e], verbose=1)
+            pickle_dump('dumps/milestonefinal'+"-"+k,train_result,time_callback.times, model=model)
+    else:
+        test_gen = ImageDataGenerator(rescale=1/255)
+        test_gen.fit(x_test)
+        iterator_test = test_gen.flow(x_test ,y_test)
+        evaluate_model(load_from_dump=load_from_dump, generator=iterator_test)
+
 if __name__ == "__main__":
-    milestone4(epoch=100)
+    #milestone1(epoch=100,load_from_dump="milestone1")
+    #evaluate_milestones()
+    final_model(5)
