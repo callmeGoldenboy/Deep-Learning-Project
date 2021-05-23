@@ -79,6 +79,15 @@ def get_datasets():
     y_test_one_hot = to_categorical(y_test)
     return x_train,x_val,x_test,y_train_one_hot,y_val_one_hot,y_test_one_hot
 
+def box_plot_time():
+    names = [f_n for f_n in os.listdir("dumps") if ('milestone' in f_n and not os.path.isdir(os.path.join("dumps",f_n)))]
+    cnn_times = [(pickle.load(open("dumps/" + f_n, "rb")))['times'][1:] for f_n in names]
+    plt.figure(figsize=(20,10))
+    plt.yscale('log')
+    plt.boxplot(cnn_times,showfliers=False)
+    plt.xticks(np.arange(0,len(names)),names,rotation=45)
+    plt.savefig("src/results/boxplot")
+
 def random_crop(image, crop_size=(24,24)):
     from skimage.transform import resize
     height, width = image.shape[:2] # get original shape
@@ -123,5 +132,5 @@ def tmp():
 #print(history['loss'])
 #plot_loss_and_accuracy(history)
 
-[plot_loss_and_accuracy(milestone=f_n, save=True, name=f_n+".png") for f_n in os.listdir("dumps") if ('milestone4' in f_n and not os.path.isdir(os.path.join("dumps",f_n)))]
-        
+#[plot_loss_and_accuracy(milestone=f_n, save=True, name=f_n+".png") for f_n in os.listdir("dumps") if ('milestone' in f_n and not os.path.isdir(os.path.join("dumps",f_n)))]
+box_plot_time()
