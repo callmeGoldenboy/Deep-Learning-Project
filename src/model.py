@@ -202,7 +202,7 @@ def milestone3(epoch=5, load_model=None):
         print(f"Milestone 3: accuracy: {acc}, loss: {loss}")
 
 
-def random_crop(image, crop_size=(31,31)):
+def random_crop(image, crop_size=(24,24)):
     # crop_size=(16,16) is too small since the native res is (32,32)
     #(24,24) gave small acc too
     #(28,28) also gave small acc
@@ -227,9 +227,9 @@ def milestone4(epoch=5, load_model=None):
             #"rot-30": ImageDataGenerator(rescale=1/255, rotation_range=30),
             #"rot-15": ImageDataGenerator(rescale=1/255, rotation_range=15),
             #"flip-horizontal": ImageDataGenerator(rescale=1/255, horizontal_flip=True, vertical_flip=False),
-            "flip-vertical": ImageDataGenerator(rescale=1/255, horizontal_flip=False, vertical_flip=True),
-            "flip-both": ImageDataGenerator(rescale=1/255, horizontal_flip=True, vertical_flip=True),
-            #"crop": ImageDataGenerator(rescale=1/255, preprocessing_function=random_crop),
+            #"flip-vertical": ImageDataGenerator(rescale=1/255, horizontal_flip=False, vertical_flip=True),
+            #"flip-both": ImageDataGenerator(rescale=1/255, horizontal_flip=True, vertical_flip=True),
+            "crop": ImageDataGenerator(rescale=1/255, preprocessing_function=random_crop),
         }
 
         val_gen = ImageDataGenerator(rescale=1/255)

@@ -79,7 +79,7 @@ def get_datasets():
     y_test_one_hot = to_categorical(y_test)
     return x_train,x_val,x_test,y_train_one_hot,y_val_one_hot,y_test_one_hot
 
-def random_crop(image, crop_size=(16,16)):
+def random_crop(image, crop_size=(24,24)):
     from skimage.transform import resize
     height, width = image.shape[:2] # get original shape
     rand_arr = np.random.random(size=2) # get two rands
@@ -96,33 +96,32 @@ def tmp():
     
     #rotation
     generators = {
-            "rot": {"train_gen": ImageDataGenerator(rescale=1/255, rotation_range=360),
+            "rot": {"train_gen": ImageDataGenerator(rescale=1/255, preprocessing_function=random_crop),
             "val_gen": ImageDataGenerator(rescale=1/255), 
                 },
     }
     for k,v in generators.items():
+        fig,(ax1,ax2) = plt.subplots(1,2)
         train_gen = v["train_gen"]
         train_gen.fit(x_train[0:1])
-
-        plt.imshow(x_train[0])
-        plt.savefig("croppingtest")
-        import time
-        time.sleep(2)
 
         iterator_train = train_gen.flow(x_train[0:1] ,y_train[0:1], batch_size=1)
         x = iterator_train.next()
         image = x[0][0]
         print(image.shape)
-        plt.imshow(image)
+        ax1.imshow(x_train[0])
+        ax2.imshow(image)
+        ax1.set_title("Before")
+        ax2.set_title("After")
         plt.savefig("croppingtest")
     
 #tmp()
-#plot_loss_and_accuracy(milestone="milestone4", name="milestone4-rot", save=True)
+#plot_loss_and_accuracy(milestone="milestone4-flip-vertical", name="milestone4-flip-vertical", save=True)
 
 #plot_dataset()
 #history = pickle.load(open('dumps/milestone1',"rb"))
 #print(history['loss'])
 #plot_loss_and_accuracy(history)
 
-#[plot_loss_and_accuracy(milestone=f_n, save=True, name=f_n+".png") for f_n in os.listdir("dumps") if ('milestone4' in f_n and not os.path.isdir(os.path.join("dumps",f_n)))]
+[plot_loss_and_accuracy(milestone=f_n, save=True, name=f_n+".png") for f_n in os.listdir("dumps") if ('milestone4' in f_n and not os.path.isdir(os.path.join("dumps",f_n)))]
         
