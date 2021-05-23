@@ -124,5 +124,5 @@ def tmp():
 #print(history['loss'])
 #plot_loss_and_accuracy(history)
 
-[plot_loss_and_accuracy(milestone=f_n, save=True, name=f_n+".png") for f_n in os.listdir("dumps") if ('milestone4' in f_n and not os.path.isdir(os.path.join("dumps",f_n)))]
+#[plot_loss_and_accuracy(milestone=f_n, save=True, name=f_n+".png") for f_n in os.listdir("dumps") if ('milestone4' in f_n and not os.path.isdir(os.path.join("dumps",f_n)))]
         
