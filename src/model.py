@@ -224,9 +224,11 @@ def milestone4(epoch=5, load_model=None):
 
         generators = {
             #"rot-45": ImageDataGenerator(rescale=1/255, rotation_range=45),
-            "rot-30": ImageDataGenerator(rescale=1/255, rotation_range=30),
-            "rot-15": ImageDataGenerator(rescale=1/255, rotation_range=15),
-            "flip": ImageDataGenerator(rescale=1/255, horizontal_flip=True, vertical_flip=True),
+            #"rot-30": ImageDataGenerator(rescale=1/255, rotation_range=30),
+            #"rot-15": ImageDataGenerator(rescale=1/255, rotation_range=15),
+            #"flip-horizontal": ImageDataGenerator(rescale=1/255, horizontal_flip=True, vertical_flip=False),
+            "flip-vertical": ImageDataGenerator(rescale=1/255, horizontal_flip=False, vertical_flip=True),
+            "flip-both": ImageDataGenerator(rescale=1/255, horizontal_flip=True, vertical_flip=True),
             #"crop": ImageDataGenerator(rescale=1/255, preprocessing_function=random_crop),
         }
 
