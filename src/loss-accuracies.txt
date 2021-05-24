@@ -8,3 +8,11 @@ milestone4-flip-vertical: accuracy: 10.0000%, loss: 2.3026421070098877
 milestone4-rot-15: accuracy: 53.2100%, loss: 2.7111563682556152
 milestone4-rot-30: accuracy: 52.4400%, loss: 2.395236015319824
 milestone4-rot-45: accuracy: 51.9400%, loss: 1.8336427211761475
+
+milestonefinal-crop: accuracy: 62.9700%, loss: 1.1492822170257568
+milestonefinal-horizontal-flip: accuracy: 58.7300%, loss: 1.1989346742630005
+milestonefinal-rot-15: accuracy: 58.7200%, loss: 1.2759445905685425
+milestonefinal-crop-horizontal-flip: accuracy: 65.0900%, loss: 1.0327016115188599
+milestonefinal-crop-rot-15: accuracy: 63.1000%, loss: 1.0875223875045776
+milestonefinal-rot-15-horizontal-flip: accuracy: 68.4400%, loss: 0.9782618880271912
+milestonefinal-rot-15-crop-horizontal-flip: accuracy: 55.3600%, loss: 1.2623025178909302
