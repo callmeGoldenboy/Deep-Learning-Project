@@ -146,7 +146,7 @@ def get_datasets():
     return x_train,x_val,x_test,y_train_one_hot,y_val_one_hot,y_test_one_hot
     
 
-def init_model(params={}):
+def init_model(params):
     """Initializes an AlexNet model with the given parameter settings
 
     Args:
@@ -226,11 +226,13 @@ def milestone3(epoch=5, load_from_dump=None):
     x_train,x_val,x_test,y_train,y_val,y_test = get_datasets()
     if not load_from_dump:
         #Investigate the effects of applying different degrees of dropout
-        params =  {"epoch":epoch}
-        dropout_options = [1,2]
-        dropout_ratios = [0.3,0.4,0.5,0.6]
+        params =  {"epoch":epoch,"dropout":True}
+        #dropout_options = [1,2]
+        #dropout_ratios = [0.3,0.4,0.5,0.6]
+        dropout_options = [2]
+        dropout_ratios = [0.4]
         for option in dropout_options:
-            params["options"] = option
+            params["dropout_option"] = option
             for ratio in dropout_ratios:
                 time_callback = TimeHistory()   
                 early_stopping_monitor = EarlyStopping(restore_best_weights=True, patience=epoch)
@@ -394,24 +396,30 @@ def evaluate_milestones():
         for version in versions:
             func(load_from_dump=version)
 
-def final_model(epoch,load_from_dump=None):
+def final_model(epoch=None,load_from_dump=None):
     #should have batchnormalization, cropping, horizontal flip, rotation 15
     x_train,x_val,x_test,y_train,y_val,y_test = get_datasets()
     if not load_from_dump:
         params =  {"epoch":epoch, "data_augmentation":True,"batch_norm":True}
         time_callback = TimeHistory()
-
         generators = {
-            "rot-15-crop-horizontal-flip": ImageDataGenerator(rescale=1/255,rotation_range=15,horizontal_flip=True,preprocessing_function=random_crop),
+            "crop": ImageDataGenerator(rescale=1/255,preprocessing_function=random_crop),
+            "horizontal-flip": ImageDataGenerator(rescale=1/255,horizontal_flip=True),
+            "rot-15": ImageDataGenerator(rescale=1/255,rotation_range=15),
+            "crop-horizontal-flip": ImageDataGenerator(rescale=1/255,horizontal_flip=True,preprocessing_function=random_crop),
+            "crop-rot-15": ImageDataGenerator(rescale=1/255,rotation_range=15,preprocessing_function=random_crop),
+            #"rot-15-horizontal-flip": ImageDataGenerator(rescale=1/255,rotation_range=15,horizontal_flip=True),
+            #"rot-15-crop-horizontal-flip": ImageDataGenerator(rescale=1/255,rotation_range=15,horizontal_flip=True,preprocessing_function=random_crop),
         }
 
         val_gen = ImageDataGenerator(rescale=1/255)
         val_gen.fit(x_val)
         iterator_val = val_gen.flow(x_val, y_val, batch_size=100)
         for k,v in generators.items():
+            print(f"Training will stop if there is no improvement after {int(epoch*0.1)} epochs")
             train_gen = v
             train_gen.fit(x_train)
-            early_stopping_monitor = EarlyStopping(restore_best_weights=True, patience=epoch)
+            early_stopping_monitor = EarlyStopping(restore_best_weights=True, patience=10)
             model = init_model(params=params)
             iterator_train = train_gen.flow(x_train ,y_train, batch_size=model.batch_size)
             train_result = model.net.fit(iterator_train, batch_size=model.batch_size, 
@@ -420,12 +428,17 @@ def final_model(epoch,load_from_dump=None):
                                     callbacks = [e for e in [model.lrr, time_callback, early_stopping_monitor] if e], verbose=1)
             pickle_dump('dumps/milestonefinal'+"-"+k,train_result,time_callback.times, model=model)
     else:
+        models = ["crop","horizontal-flip","rot-15","crop-horizontal-flip","crop-rot-15","rot-15-horizontal-flip","rot-15-crop-horizontal-flip"]
         test_gen = ImageDataGenerator(rescale=1/255)
         test_gen.fit(x_test)
         iterator_test = test_gen.flow(x_test ,y_test)
-        evaluate_model(load_from_dump=load_from_dump, generator=iterator_test)
+        for model in models:
+            load_from_dump = "milestonefinal-" + model
+            evaluate_model(load_from_dump=load_from_dump, generator=iterator_test)
 
 if __name__ == "__main__":
     #milestone1(epoch=100,load_from_dump="milestone1")
+    milestone3(load_from_dump="mileston3-opt-2-ratio-0.4")
     #evaluate_milestones()
-    final_model(5)
+    #final_model(epoch=100)
+    #final_model(load_from_dump=True)
