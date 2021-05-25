@@ -1,9 +1,13 @@
 import matplotlib.pyplot as plt
 from keras.datasets import cifar10
 import numpy as np
+import seaborn as sns
 import pickle
 import os
 import math
+
+sns.set()
+
 def plot_dataset():
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     num_classes = 10
@@ -80,12 +84,44 @@ def get_datasets():
     return x_train,x_val,x_test,y_train_one_hot,y_val_one_hot,y_test_one_hot
 
 def box_plot_time():
-    names = [f_n for f_n in os.listdir("dumps") if ('milestone' in f_n and not os.path.isdir(os.path.join("dumps",f_n)))]
+    names = [f_n for f_n in os.listdir("dumps") if ('m' in f_n and not os.path.isdir(os.path.join("dumps",f_n)))]
     cnn_times = [(pickle.load(open("dumps/" + f_n, "rb")))['times'][1:] for f_n in names]
-    plt.figure(figsize=(20,10))
-    plt.yscale('log')
-    plt.boxplot(cnn_times,showfliers=False)
-    plt.xticks(np.arange(0,len(names)),names,rotation=45)
+    pairs = [(names[i], cnn_times[i]) for i in range(0,len(names))]
+    
+    m_3 = [p[1] for p in pairs if 'mileston3' in p[0]]
+    pairs = [p for p in pairs if 'mileston3' not in p[0]]
+    m_3 = np.array(m_3).ravel()
+    pairs.append(('m3-all',m_3))
+
+    pairs.sort(key= (lambda p: np.median(p[1])) )
+
+    names = [ p[0] for p in pairs]
+    cnn_times = [ p[1] for p in pairs ]
+
+    fig, axes = plt.subplots(nrows=1, ncols=3)
+    axes[0].set_ylabel("execution time (s)")
+
+    axes[0].boxplot(cnn_times[0:7],showfliers=False)
+    axes[0].set_xticks(np.arange(1,8))
+    axes[0].set_xticklabels(names[0:7],rotation=75, ha="center")
+
+    axes[1].boxplot(cnn_times[7:12],showfliers=False)
+    axes[1].set_xticks(np.arange(1,6))
+    axes[1].set_xticklabels(names[7:12],rotation=75, ha="center")
+    
+    axes[2].boxplot(cnn_times[12:],showfliers=False)
+    axes[2].set_xticks(np.arange(1,6))
+    axes[2].set_xticklabels(names[12:],rotation=75, ha="center")
+    
+    fig.tight_layout()
+
+    
+    
+    #plt.suptitle("Execution time (s)\n")
+    #plt.figure(figsize=(20,10))
+    #plt.yscale('log')
+    #plt.boxplot(cnn_times,showfliers=False)
+    #plt.xticks(np.arange(0,len(names)),names,rotation=45)
     plt.savefig("src/results/boxplot")
 
 def random_crop(image, crop_size=(24,24)):
