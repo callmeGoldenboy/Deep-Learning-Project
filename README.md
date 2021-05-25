@@ -16,7 +16,7 @@ pip install -r requirements.txt
 
 ## Data 
 
-The  experiments were conducted on the [ciphar-10](https://www.cs.toronto.edu/~kriz/cifar.html).dataset.
+The  experiments were conducted on the [ciphar-10](https://www.cs.toronto.edu/~kriz/cifar.html) dataset.
 
 Instantiating a model can be done with the init_model function. One can set the settings of the network, such as having batch normalization or not, having dropout etc. 
 
