@@ -1,6 +1,6 @@
 h5py==3.2.1
 Keras==2.4.3
-numpy==1.20.3
+numpy==1.21.0
 PyYAML==5.4.1
 scipy==1.6.3
 tensorflow==2.5.3
